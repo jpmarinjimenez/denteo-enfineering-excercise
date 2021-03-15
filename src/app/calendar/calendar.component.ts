@@ -8,6 +8,7 @@ import { Component } from '@angular/core';
 export class CalendarComponent {
     public days: Array<Date>;
     public availableSlots: Array<Date> = [];
+    public selectedSlot: any = null;
 
     constructor() {
         this.days = this.getDates();
@@ -34,14 +35,19 @@ export class CalendarComponent {
 
     // TODO: implement this
     findFreeTimeslots = (dayIndex: any) => {
-        if (dayIndex === -1) {
+        if (+dayIndex === -1) {
+            this.availableSlots = [];
+        } else {
             const selectedDate: Date = new Date(this.days[dayIndex]);
-    
+
             const start: Date = this.createDateWithTime(
                 selectedDate,
                 this.DAY_START
             );
-            const end: Date = this.createDateWithTime(selectedDate, this.DAY_END);
+            const end: Date = this.createDateWithTime(
+                selectedDate,
+                this.DAY_END
+            );
             const lunchStart: Date = this.createDateWithTime(
                 selectedDate,
                 this.LUNCH_START
@@ -50,11 +56,14 @@ export class CalendarComponent {
                 selectedDate,
                 this.LUNCH_END
             );
-    
-            this.availableSlots = this.generateSlots(start, end, lunchStart, lunchEnd);
+
+            this.availableSlots = this.generateSlots(
+                start,
+                end,
+                lunchStart,
+                lunchEnd
+            );
             this.removeTakenSlots(selectedDate);
-        } else {
-            this.availableSlots = [];
         }
     };
 
@@ -80,7 +89,12 @@ export class CalendarComponent {
         );
     };
 
-    generateSlots = (start:Date, end:Date, lunchStart:Date, lunchEnd:Date) => {
+    generateSlots = (
+        start: Date,
+        end: Date,
+        lunchStart: Date,
+        lunchEnd: Date
+    ) => {
         let slots: Array<Date> = [];
 
         for (
@@ -92,37 +106,52 @@ export class CalendarComponent {
                 currentSlot.getTime() <= lunchStart.getTime() - 30 * 60000 ||
                 currentSlot.getTime() >= lunchEnd.getTime()
             ) {
-                slots.push(new Date(currentSlot.getTime())); 
+                slots.push(new Date(currentSlot.getTime()));
             }
         }
 
         return slots;
-    }
+    };
 
-    removeTakenSlots = (selectedDate:Date) => {
+    removeTakenSlots = (selectedDate: Date) => {
         let takenSlots: Array<any> = [];
 
         for (let i = 0; i < this.availableSlots.length; i++) {
             const currentSlot = this.availableSlots[i].getTime() + 30 * 60000;
-            
+
             this.weeklyAppointments.forEach((appointment) => {
                 const takenSlotFrom: Date = new Date(appointment.from);
                 const takenSlotTo: Date = new Date(appointment.to);
-    
+
                 // if its not the same day
                 if (takenSlotFrom.getDay() != selectedDate.getDay()) {
                     return;
                 }
 
-                if (currentSlot > takenSlotFrom.getTime() && currentSlot <= takenSlotTo.getTime()){
+                if (
+                    currentSlot > takenSlotFrom.getTime() &&
+                    currentSlot <= takenSlotTo.getTime()
+                ) {
                     takenSlots.push(i);
                     return;
                 }
             });
         }
-        
-        for (var i = takenSlots.length -1; i >= 0; i--) {
+
+        for (var i = takenSlots.length - 1; i >= 0; i--) {
             this.availableSlots.splice(takenSlots[i], 1);
         }
-    }
+    };
+
+    selectSlot = (slotIndex: any) => {
+        if (+slotIndex === -1) {
+            this.selectedSlot = null;
+        } else {
+            this.selectedSlot = this.availableSlots[slotIndex];
+        }
+    };
+
+    bookSlot = () => {
+        alert('You have successfully booked an appointment!');
+    };
 }
